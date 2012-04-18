@@ -3,7 +3,9 @@ api = 2
 
 ; Base modules
 projects[ctools][subdir] = "contrib"
-projects[libraries][subdir] = "contrib"
+projects[ctools][install_path] = "sites/all/modules"
+
+projects[libraries][install_path] = "sites/all/modules/contrib"
 projects[diff][subdir] = "contrib"
 projects[strongarm][subdir] = "contrib"
 projects[token][subdir] = "contrib"
