@@ -1,0 +1,295 @@
+<?php
+/**
+ * Implements hook_install().
+ *
+ * Perform actions to set up the site for this profile.
+ */
+function awdrupal_install() {
+  // Default themes : omega is ugly when empty.
+  //variable_set('theme_default', 'omega');
+
+  // Enable the admin theme.
+  db_update('system')
+    ->fields(array('status' => 1))
+    ->condition('type', 'theme')
+    ->condition('name', 'seven')
+    ->execute();
+  variable_set('admin_theme', 'seven');
+  variable_set('node_admin_theme', '1');
+
+
+  // Create a default roles : administrator, webmaster
+  $webmaster_role = new stdClass();
+  $webmaster_role->name = 'webmaster';
+  $webmaster_role->weight = 2;
+  user_role_save($webmaster_role);
+
+  $admin_role = new stdClass();
+  $admin_role->name = 'administrator';
+  $admin_role->weight = 3;
+  user_role_save($admin_role);
+
+  $roles = array('administrator' => $admin_role, 'webmaster' => $webmaster_role);
+  awdrupal_configure_input($roles);
+  awdrupal_configure_blocks();
+  awdrupal_configure_content($roles);
+  awdrupal_configure_locale();
+  awdrupal_configure_users_security();
+  awdrupal_configure_seo();
+  awdrupal_configure_menu();
+
+  // Set all permissions for the admin role
+  user_role_grant_permissions($admin_role->rid, array_keys(module_invoke_all('permission')));
+  // Set this as the administrator role.
+  variable_set('user_admin_role', $admin_role->rid);
+
+  // Assign user 1 the "administrator" role.
+  db_insert('users_roles')
+    ->fields(array('uid' => 1, 'rid' => $admin_role->rid))
+    ->execute();
+}
+
+
+function awdrupal_configure_menu() {
+  // Create a Home link in the main menu.
+/*  $item = array(
+    'link_title' => st('Home'),
+    'link_path' => '<front>',
+    'menu_name' => 'main-menu',
+  );
+  menu_link_save($item);
+
+  // Update the menu router information.
+  menu_rebuild();*/
+}
+
+
+function awdrupal_configure_blocks() {
+  // Enable some standard blocks.
+  $default_theme = variable_get('theme_default', 'bartik');
+  $admin_theme = variable_get('admin_theme', 'seven');
+
+  $values = array(
+    array(
+      'module' => 'system',
+      'delta' => 'main',
+      'theme' => $default_theme,
+      'status' => 1,
+      'weight' => 0,
+      'region' => 'content',
+      'pages' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'node',
+      'delta' => 'recent',
+      'theme' => $admin_theme,
+      'status' => 1,
+      'weight' => 10,
+      'region' => 'dashboard_main',
+      'pages' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'system',
+      'delta' => 'help',
+      'theme' => $default_theme,
+      'status' => 1,
+      'weight' => 0,
+      'region' => 'help',
+      'pages' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'system',
+      'delta' => 'main',
+      'theme' => $admin_theme,
+      'status' => 1,
+      'weight' => 0,
+      'region' => 'content',
+      'pages' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'system',
+      'delta' => 'help',
+      'theme' => $admin_theme,
+      'status' => 1,
+      'weight' => 0,
+      'region' => 'help',
+      'pages' => '',
+      'cache' => -1,
+    ),
+    array(
+      'module' => 'user',
+      'delta' => 'new',
+      'theme' => $admin_theme,
+      'status' => 1,
+      'weight' => 0,
+      'region' => 'dashboard_sidebar',
+      'pages' => '',
+      'cache' => -1,
+    ),
+  );
+  $query = db_insert('block')->fields(array('module', 'delta', 'theme', 'status', 'weight', 'region', 'pages', 'cache'));
+  foreach ($values as $record) {
+    $query->values($record);
+  }
+  $query->execute();
+}
+
+
+function awdrupal_configure_input($roles) {
+  /*
+   * Refactor this function
+   */
+  require_once drupal_get_path('profile', 'awdrupal') . '/input_profiles.inc';
+
+  /*
+   * Add input formats
+   */
+  $wysiwyg_format = awdrupal_input_format_wysiwyg();
+  $wysiwyg_format = (object) $wysiwyg_format;
+  filter_format_save($wysiwyg_format);
+
+  $full_html_format = awdrupal_input_format_full_html();
+  $full_html_format = (object) $full_html_format;
+  filter_format_save($full_html_format);
+
+  // The webmaster can use all input formats
+  $perms = array();
+  foreach (array($wysiwyg_format, $full_html_format) as $format) {
+    $perms[] = filter_permission_name($format);
+  }
+
+  foreach ($roles as $role) {
+    user_role_grant_permissions($role->rid, $perms);
+  }
+
+  /*
+   * Configure ckeditor
+   */
+  // Remove default ckeditor profiles
+  db_truncate('ckeditor_input_format')->execute();
+  db_delete('ckeditor_settings')
+    ->condition('name', "CKEditor Global Profile", '!=')
+    ->execute();
+
+  // Add new profile
+  db_insert('ckeditor_input_format')
+      ->fields(array("name" => "basic_wysiwyg",
+                    "format" => 'wysiwyg'))
+      ->execute();
+
+  // Options for basic_wysiwyg format
+  $basic_wysiwyg = awdrupal_input_ckeditor_basic_wysiwyg();
+  db_insert('ckeditor_settings')->fields(array("name" => "basic_wysiwyg", "settings" => serialize($basic_wysiwyg)))->execute();
+
+  /*
+   * Configure IMCE
+   */
+  foreach (awdrupal_input_imce_webmaster($roles) as $name => $value) {
+    variable_set($name, $value);
+  }
+}
+
+
+function awdrupal_configure_locale() {
+  variable_set('site_default_country', 'FR');
+
+  // First day of the week is monday
+  variable_set('date_first_day', 1);
+  variable_set('date_default_timezone', 'Europe/Paris');
+
+  // Users cannot set their own timezone
+  variable_set('configurable_timezones', 0);
+}
+
+
+function awdrupal_configure_content($roles) {
+  $types = array(
+    array(
+      'type' => 'page',
+      'name' => st('Basic page'),
+      'base' => 'node_content',
+      'description' => st("Use <em>basic pages</em> for your static content, such as an 'About us' page."),
+      'custom' => 1,
+      'modified' => 1,
+      'locked' => 0,
+    ),
+  );
+
+  foreach ($types as $type) {
+    $type = node_type_set_defaults($type);
+    node_type_save($type);
+    node_add_body_field($type);
+  }
+
+  // Don't display date and author information for "Basic page" nodes by default.
+  variable_set('node_submitted_page', FALSE);
+
+  /*
+   * Set content related permissions
+   */
+  $anon_permissions = array('access content');
+  $loggedin_permissions = $anon_permissions;
+  $webmaster_permissions = $loggedin_permissions;
+
+  // The webmaster can edit/delete/ ... all content_types + access content list page + manage revisions
+  foreach (node_permissions_get_configured_types() as $type) {
+    $webmaster_permissions =
+      array_merge($webmaster_permissions,
+        array_keys(node_list_permissions($type)));
+  }
+
+  $node_general_perms = array(
+    'access content overview',
+    'view own unpublished content',
+    'view revisions',
+    'revert revisions',
+    'delete revisions',
+  );
+  $webmaster_permissions = array_merge($webmaster_permissions, $node_general_perms);
+
+  user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, $anon_permissions);
+  user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, $loggedin_permissions);
+  foreach ($roles as $role) {
+    user_role_grant_permissions($role->rid, $webmaster_permissions);
+  }
+}
+
+
+function awdrupal_configure_seo() {
+
+  /*
+   * module:xmlsitemap
+   */
+  $sitemap_settings = array(
+    'status' => 1,
+    'priority' => 0.5,
+  );
+
+  // Add all node and user bundles to the sitemap
+  foreach (array('node', 'user') as $entity) {
+    $entity_info = entity_get_info($entity);
+    foreach (array_keys($entity_info['bundles']) as $bundle) {
+      xmlsitemap_link_bundle_settings_save($entity, $bundle, $sitemap_settings);
+    }
+  }
+
+  // Add all main-menu links by default to the sitemap
+  xmlsitemap_link_bundle_settings_save('menu_link', 'main-menu', $sitemap_settings);
+
+  // Transliteration settings
+  variable_set('pathauto_transliterate', 1);
+  variable_set('pathauto_reduce_ascii', 1);
+  variable_set('transliteration_file_lowercase', 1);
+  variable_set('transliteration_file_uploads', 1);
+}
+
+
+function awdrupal_configure_users_security() {
+  // Do not allow visitor account creation with administrative approval.
+  variable_set('user_register', USER_REGISTER_ADMINISTRATORS_ONLY);
+}
+

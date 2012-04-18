@@ -1,0 +1,91 @@
+name = AW Drupal7
+description = Alter Way install profile for developping Drupal projects.
+version = 1.0
+core = 7.x
+
+; core modules
+dependencies[] = block
+dependencies[] = contextual
+dependencies[] = dashboard
+dependencies[] = help
+dependencies[] = image
+dependencies[] = list
+dependencies[] = locale
+dependencies[] = menu
+dependencies[] = number
+dependencies[] = options
+dependencies[] = path
+dependencies[] = taxonomy
+dependencies[] = dblog
+dependencies[] = overlay
+dependencies[] = field_ui
+dependencies[] = file
+dependencies[] = rdf
+
+; Base modules
+dependencies[] = ctools
+dependencies[] = libraries
+dependencies[] = diff
+dependencies[] = strongarm
+dependencies[] = token
+dependencies[] = entity
+dependencies[] = entity_token
+dependencies[] = context
+dependencies[] = context_ui
+dependencies[] = date
+dependencies[] = date_popup
+dependencies[] = date_api
+dependencies[] = date_tools
+dependencies[] = date_views
+dependencies[] = jquery_update
+dependencies[] = menu_attributes
+dependencies[] = link
+
+; Views & Panels
+dependencies[] = views
+dependencies[] = views_ui
+dependencies[] = panels
+dependencies[] = ctools_access_ruleset
+dependencies[] = page_manager
+dependencies[] = ctools_custom_content
+dependencies[] = views_content
+dependencies[] = stylizer
+
+; Performance
+dependencies[] = entitycache
+; dependencies[] = performance_hacks
+
+; Publication workflow & input filters
+dependencies[] = ckeditor
+dependencies[] = imce
+dependencies[] = pathologic
+dependencies[] = linkit
+
+; Seo & Security
+dependencies[] = pathauto
+dependencies[] = globalredirect
+dependencies[] = metatag
+dependencies[] = xmlsitemap
+dependencies[] = xmlsitemap_custom
+dependencies[] = xmlsitemap_engines
+dependencies[] = xmlsitemap_menu
+dependencies[] = xmlsitemap_node
+dependencies[] = xmlsitemap_taxonomy
+dependencies[] = xmlsitemap_user
+dependencies[] = transliteration
+dependencies[] = googleanalytics
+
+; Backoffice
+dependencies[] = module_filter
+dependencies[] = admin
+
+; Users & Rights management
+dependencies[] = logintoboggan
+
+; Theme
+; no need to state any omega theme dependencies here, see .install for theme variable activation
+; dependencies[] = css3pie
+
+files[] = awdrupal.profile
+
+
