@@ -1,3 +1,5 @@
+core = 7.x
+api = 2
 
 ; Base modules
 projects[ctools][subdir] = "contrib"
