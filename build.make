@@ -1,11 +1,16 @@
 core = 7.x
 api = 2
+ 
+projects[] = drupal  
+
+; Install profile
+projects[awdrupal][type] = profile
+projects[awdrupal][download][type] = "git"
+projects[awdrupal][download][url] = "git://github.com/alterway/awdrupal.git" 
 
 ; Base modules
 projects[ctools][subdir] = "contrib"
-projects[ctools][install_path] = "sites/all/modules"
-
-projects[libraries][install_path] = "sites/all/modules/contrib"
+projects[libraries][subdir] = "contrib"
 projects[diff][subdir] = "contrib"
 projects[strongarm][subdir] = "contrib"
 projects[token][subdir] = "contrib"
