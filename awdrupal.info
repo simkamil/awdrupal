@@ -54,7 +54,6 @@ dependencies[] = stylizer
 
 ; Performance
 dependencies[] = entitycache
-; dependencies[] = performance_hacks
 
 ; Publication workflow & input filters
 dependencies[] = ckeditor
@@ -78,14 +77,14 @@ dependencies[] = googleanalytics
 
 ; Backoffice
 dependencies[] = module_filter
-dependencies[] = admin
+dependencies[] = admin_menu
+dependencies[] = admin_menu_toolbar
 
 ; Users & Rights management
 dependencies[] = logintoboggan
 
 ; Theme
 ; no need to state any omega theme dependencies here, see .install for theme variable activation
-; dependencies[] = css3pie
 
 files[] = awdrupal.profile
 

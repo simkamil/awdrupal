@@ -1,12 +1,9 @@
 <?php
+
 /**
  * Implements hook_install().
- *
- * Perform actions to set up the site for this profile.
  */
 function awdrupal_install() {
-  // Default themes : omega is ugly when empty.
-  //variable_set('theme_default', 'omega');
 
   // Enable the admin theme.
   db_update('system')
@@ -40,6 +37,7 @@ function awdrupal_install() {
 
   // Set all permissions for the admin role
   user_role_grant_permissions($admin_role->rid, array_keys(module_invoke_all('permission')));
+
   // Set this as the administrator role.
   variable_set('user_admin_role', $admin_role->rid);
 
@@ -50,8 +48,14 @@ function awdrupal_install() {
 }
 
 
+/**
+ * Adds menu items and options.
+ */
 function awdrupal_configure_menu() {
-  // Create a Home link in the main menu.
+
+  //Empty for the moment.
+  //Here's how to add menu items :
+
 /*  $item = array(
     'link_title' => st('Home'),
     'link_path' => '<front>',
@@ -64,6 +68,9 @@ function awdrupal_configure_menu() {
 }
 
 
+/**
+ * Add and configure standart blocks.
+ */
 function awdrupal_configure_blocks() {
   // Enable some standard blocks.
   $default_theme = variable_get('theme_default', 'bartik');
@@ -139,11 +146,13 @@ function awdrupal_configure_blocks() {
 }
 
 
+/**
+ * Configure input formats and filters.
+ */
 function awdrupal_configure_input($roles) {
-  /*
-   * Refactor this function
-   */
+
   require_once drupal_get_path('profile', 'awdrupal') . '/input_profiles.inc';
+
 
   /*
    * Add input formats
@@ -183,7 +192,12 @@ function awdrupal_configure_input($roles) {
 
   // Options for basic_wysiwyg format
   $basic_wysiwyg = awdrupal_input_ckeditor_basic_wysiwyg();
-  db_insert('ckeditor_settings')->fields(array("name" => "basic_wysiwyg", "settings" => serialize($basic_wysiwyg)))->execute();
+  db_insert('ckeditor_settings')
+    ->fields(array(
+      "name" => "basic_wysiwyg",
+      "settings" => serialize($basic_wysiwyg)))
+    ->execute();
+
 
   /*
    * Configure IMCE
@@ -194,6 +208,9 @@ function awdrupal_configure_input($roles) {
 }
 
 
+/*
+ * l10n settings.
+ */
 function awdrupal_configure_locale() {
   variable_set('site_default_country', 'FR');
 
@@ -206,6 +223,9 @@ function awdrupal_configure_locale() {
 }
 
 
+/**
+ * Basic node types.
+ */
 function awdrupal_configure_content($roles) {
   $types = array(
     array(
@@ -259,6 +279,9 @@ function awdrupal_configure_content($roles) {
 }
 
 
+/**
+ * SEO related module configurations.
+ */
 function awdrupal_configure_seo() {
 
   /*
